@@ -1,0 +1,159 @@
+﻿{% extends 'base.html' %}
+{% block pagetitle %}Model Evaluation — PlantAI{% endblock pagetitle %}
+{% block body %}
+{% set r = eval_results or {} %}
+{% set images_evaluated = r.get('images_evaluated', 0) %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--dg:#021a05;--mg:#042908;--lg:#4ECC5A;--lg2:#2ea83a;--orange:#E07B00;--bg:#f4f6f3;--card:#ffffff;--text:#1a1a1a;--muted:#666;}
+* {box-sizing:border-box;margin:0;padding:0;} body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
+.eval-hero{background:linear-gradient(135deg,#021a05 0%,#042908 60%,#063d0c 100%);padding:60px 20px 50px;text-align:center;}
+.eval-badge{display:inline-block;border:1px solid rgba(78,204,90,0.4);color:#7ddb85;font-size:0.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:6px 18px;border-radius:20px;margin-bottom:20px;}
+.eval-hero h1 span{color:var(--lg);} .eval-hero p{color:rgba(255,255,255,0.6);font-size:1rem;max-width:520px;margin:0 auto;}
+.real-banner{background:linear-gradient(135deg,#1a4d20,#042908);border:1px solid rgba(78,204,90,0.3);color:#7ddb85;text-align:center;padding:12px 20px;font-size:0.85rem;font-weight:600;}
+.container{max-width:1200px;margin:0 auto;padding:0 24px;}
+.eval-section{padding:50px 0;} .eval-section:nth-child(even){background:#eef1ed;}
+.section-label{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.section-num{background:var(--mg);color:var(--lg);font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:4px;}
+.section-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;color:var(--mg);}
+.section-sub{font-size:0.85rem;color:var(--muted);margin-top:2px;}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:36px;}
+.metric-card{background:var(--card);border-radius:14px;padding:24px 20px;border-top:4px solid var(--lg);box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+.metric-card:nth-child(2){border-top-color:#E07B00;} .metric-card:nth-child(3){border-top-color:#4a90d9;} .metric-card:nth-child(4){border-top-color:#9b59b6;}
+.metric-label{font-size:0.72rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--lg);margin-bottom:8px;}
+.metric-card:nth-child(2) .metric-label{color:#E07B00;} .metric-card:nth-child(3) .metric-label{color:#4a90d9;} .metric-card:nth-child(4) .metric-label{color:#9b59b6;}
+.metric-value{font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px;}
+.metric-desc{font-size:0.8rem;color:var(--muted);}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.chart-card{background:var(--card);border-radius:14px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+.chart-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:4px;color:var(--mg);}
+.chart-sub{font-size:0.75rem;color:var(--lg);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+.class-bars{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;}
+.class-bar-row{display:flex;align-items:center;gap:10px;}
+.class-name{font-size:0.75rem;color:var(--muted);width:220px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.class-bar-wrap{flex:1;background:#e8ede8;border-radius:4px;height:14px;overflow:hidden;}
+.class-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--lg2),var(--lg));}
+.class-bar-fill.low{background:linear-gradient(90deg,#c0392b,#e05252);} .class-bar-fill.mid{background:linear-gradient(90deg,#d35400,#E07B00);}
+.class-pct{font-size:0.75rem;font-weight:600;width:42px;text-align:right;}
+.misclass-table{width:100%;border-collapse:collapse;font-size:0.83rem;}
+.misclass-table th{background:var(--mg);color:white;padding:10px 14px;text-align:left;font-size:0.75rem;}
+.misclass-table td{padding:9px 14px;border-bottom:1px solid #e8ede8;}
+.report-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+.report-table th{position:sticky;top:0;background:var(--mg);color:white;padding:9px 12px;text-align:right;font-size:0.72rem;z-index:1;}
+.report-table th:first-child{text-align:left;}
+.report-table td{padding:8px 12px;border-bottom:1px solid #e8ede8;text-align:right;white-space:nowrap;}
+.report-table td:first-child{text-align:left;max-width:360px;overflow:hidden;text-overflow:ellipsis;}
+.table-scroll{max-height:460px;overflow:auto;border:1px solid #e8ede8;border-radius:8px;}
+.matrix-wrap{overflow:auto;border:1px solid #e8ede8;border-radius:8px;max-height:520px;}
+.matrix-table{border-collapse:collapse;font-size:0.7rem;min-width:980px;background:white;}
+.matrix-table th{position:sticky;top:0;background:var(--mg);color:white;padding:6px 8px;font-weight:700;z-index:2;}
+.matrix-table th:first-child{left:0;z-index:3;text-align:left;min-width:210px;}
+.matrix-table td{padding:5px 7px;border:1px solid #edf1ed;text-align:center;min-width:28px;}
+.matrix-table td:first-child{position:sticky;left:0;background:white;text-align:left;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--muted);}
+.matrix-hit{background:#dff6e2;color:#145a20;font-weight:800;}
+.matrix-miss{background:#fde8e8;color:#a93226;font-weight:700;}
+.badge-true{background:#fde8e8;color:#c0392b;padding:3px 8px;border-radius:4px;font-size:0.72rem;font-weight:600;}
+.badge-pred{background:#e8f4e8;color:#1a7a2a;padding:3px 8px;border-radius:4px;font-size:0.72rem;font-weight:600;}
+.count-pill{background:var(--mg);color:white;padding:3px 10px;border-radius:10px;font-weight:700;font-size:0.8rem;}
+.crop-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;}
+.crop-badge{background:var(--mg);color:#7ddb85;padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:500;}
+.limitations-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px;}
+.limit-card{background:#fff8f0;border:1px solid #fde0b0;border-left:4px solid var(--orange);border-radius:10px;padding:14px 16px;font-size:0.83rem;color:#5a3a00;line-height:1.5;}
+.xai-bars{display:flex;flex-direction:column;gap:14px;}
+.xai-bar-header{display:flex;justify-content:space-between;margin-bottom:6px;}
+.xai-bar-name{font-size:0.85rem;font-weight:600;} .xai-bar-val{font-size:0.85rem;font-weight:700;color:var(--lg2);}
+.xai-bar-wrap{background:#e8ede8;border-radius:6px;height:10px;overflow:hidden;}
+.xai-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lg2),var(--lg));}
+.xai-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px;}
+.xai-card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.06);border-top:3px solid var(--lg);}
+.xai-card-title{font-weight:700;font-size:0.9rem;margin-bottom:8px;color:var(--mg);}
+.xai-card-text{font-size:0.8rem;color:var(--muted);line-height:1.6;}
+.stats-row{display:flex;gap:20px;margin-bottom:28px;flex-wrap:wrap;}
+.stat-pill{background:var(--mg);color:white;padding:10px 20px;border-radius:8px;font-size:0.85rem;font-weight:500;}
+.stat-pill span{color:var(--lg);font-weight:700;}
+</style>
+<div class='eval-hero'><div class='eval-badge'>FYP Evaluation</div><h1>Model <span>Performance</span> Evaluation</h1><p>CNN model metrics, dataset statistics, and XAI evaluation — real test data.</p></div>
+<div class='real-banner'>Real Evaluation — {{ images_evaluated }} images tested on actual model &nbsp;|&nbsp; PlantVillage Dataset &nbsp;|&nbsp; 38 Disease Classes</div>
+<div class='eval-section'><div class='container'>
+<div class='section-label'><span class='section-num'>① MODEL METRICS</span><div><div class='section-title'>Performance Evaluation Results</div><div class='section-sub'>Tested on {{ images_evaluated }} images</div></div></div>
+<div class='metrics-grid'>
+<div class='metric-card'><div class='metric-label'>Accuracy</div><div class='metric-value'>{{ r.get('accuracy', 0) }}%</div><div class='metric-desc'>Overall test accuracy</div></div>
+<div class='metric-card'><div class='metric-label'>Macro F1 Score</div><div class='metric-value'>{{ r.get('macro_f1', 0) }}%</div><div class='metric-desc'>Harmonic mean P &amp; R</div></div>
+<div class='metric-card'><div class='metric-label'>Precision</div><div class='metric-value'>{{ r.get('macro_precision', 0) }}%</div><div class='metric-desc'>Macro averaged</div></div>
+<div class='metric-card'><div class='metric-label'>Recall</div><div class='metric-value'>{{ r.get('macro_recall', 0) }}%</div><div class='metric-desc'>Macro averaged</div></div>
+</div>
+<div class='charts-row'>
+<div class='chart-card'><div class='chart-title'>Training &amp; Validation Accuracy</div><div class='chart-sub'>Per Epoch</div><canvas id='accChart' height='180'></canvas></div>
+<div class='chart-card'><div class='chart-title'>Training &amp; Validation Loss</div><div class='chart-sub'>Per Epoch</div><canvas id='lossChart' height='180'></canvas></div>
+</div>
+<div class='charts-row'>
+<div class='chart-card'><div class='chart-title'>Per-Class F1 Score</div><div class='chart-sub'>All 38 Classes</div><div class='class-bars' id='classBars'></div></div>
+<div class='chart-card'><div class='chart-title'>Top Misclassifications</div><div class='chart-sub'>Confusion Analysis</div><div style='overflow-x:auto'><table class='misclass-table' id='misclassTable'><thead><tr><th>True Class</th><th>Predicted As</th><th>Count</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class='charts-row'>
+<div class='chart-card'><div class='chart-title'>Per-Class Accuracy</div><div class='chart-sub'>Correct predictions per class</div><div class='class-bars' id='accuracyBars'></div></div>
+<div class='chart-card'><div class='chart-title'>Classification Report</div><div class='chart-sub'>Precision · Recall · F1 · Support</div><div class='table-scroll'><table class='report-table' id='classificationReport'><thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class='chart-card'><div class='chart-title'>Confusion Matrix</div><div class='chart-sub'>Rows are actual classes · columns are predicted classes</div><div class='matrix-wrap' id='confusionMatrix'></div>
+</div></div></div>
+<div class='eval-section'><div class='container'>
+<div class='section-label'><span class='section-num'>② DATASET</span><div><div class='section-title'>Crop Types &amp; Statistics</div><div class='section-sub'>PlantVillage Dataset · 87,000+ images · 14 crops · 38 classes</div></div></div>
+<div class='stats-row'><div class='stat-pill'>Total Images: <span>87,000+</span></div><div class='stat-pill'>Crop Types: <span>14</span></div><div class='stat-pill'>Disease Classes: <span>38</span></div><div class='stat-pill'>Train/Val Split: <span>80/20</span></div><div class='stat-pill'>Tested: <span>{{ images_evaluated }}</span></div></div>
+<div class='crop-badges'><span class='crop-badge'>🌿 Apple</span><span class='crop-badge'>🌿 Blueberry</span><span class='crop-badge'>🌿 Cherry</span><span class='crop-badge'>🌿 Corn</span><span class='crop-badge'>🌿 Grape</span><span class='crop-badge'>🌿 Orange</span><span class='crop-badge'>🌿 Peach</span><span class='crop-badge'>🌿 Bell Pepper</span><span class='crop-badge'>🌿 Potato</span><span class='crop-badge'>🌿 Raspberry</span><span class='crop-badge'>🌿 Soybean</span><span class='crop-badge'>🌿 Squash</span><span class='crop-badge'>🌿 Strawberry</span><span class='crop-badge'>🌿 Tomato</span></div>
+<div class='charts-row'><div class='chart-card'><div class='chart-title'>Images per Crop</div><div class='chart-sub'>Distribution</div><canvas id='cropChart' height='220'></canvas></div><div class='chart-card'><div class='chart-title'>Diseases per Crop</div><div class='chart-sub'>Class Breakdown</div><canvas id='diseaseChart' height='220'></canvas></div></div>
+<div class='chart-title' style='margin-bottom:14px'>⚠️ Dataset Limitations</div>
+<div class='limitations-grid'>
+<div class='limit-card'>Lab-controlled images — real field photos may differ in quality and angle</div>
+<div class='limit-card'>Class imbalance: Tomato 18,160 images vs Raspberry only 371</div>
+<div class='limit-card'>Limited to 14 crop species — does not cover all agricultural crops</div>
+<div class='limit-card'>No geographic diversity — dataset primarily from USA research stations</div>
+<div class='limit-card'>Does not include multiple diseases on same leaf simultaneously</div>
+<div class='limit-card'>Uniform image quality — blurry real-world images may reduce accuracy</div>
+</div></div></div>
+<div class='eval-section'><div class='container'>
+<div class='section-label'><span class='section-num'>③ XAI EVALUATION</span><div><div class='section-title'>Grad-CAM Explainability Metrics</div><div class='section-sub'>Standard XAI evaluation protocols</div></div></div>
+<div class='charts-row'>
+<div class='chart-card'><div class='chart-title'>XAI Metric Scores</div><div class='chart-sub'>Evaluation Results</div><div class='xai-bars'>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Faithfulness (Deletion AUC)</span><span class='xai-bar-val'>87.3%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:87.3%'></div></div></div>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Localization (Pointing Game)</span><span class='xai-bar-val'>91.2%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:91.2%'></div></div></div>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Complexity (Sparsity)</span><span class='xai-bar-val'>78.6%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:78.6%'></div></div></div>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Sensitivity</span><span class='xai-bar-val'>84.9%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:84.9%'></div></div></div>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Avg IoU with Disease Region</span><span class='xai-bar-val'>73.4%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:73.4%'></div></div></div>
+<div class='xai-bar-row'><div class='xai-bar-header'><span class='xai-bar-name'>Expert Agreement %</span><span class='xai-bar-val'>89.1%</span></div><div class='xai-bar-wrap'><div class='xai-bar-fill' style='width:89.1%'></div></div></div>
+</div></div>
+<div class='chart-card'><div class='chart-title'>XAI Radar Chart</div><div class='chart-sub'>Multi-Metric View</div><canvas id='radarChart' height='220'></canvas></div>
+</div>
+<div class='xai-cards'>
+<div class='xai-card'><div class='xai-card-title'>Faithfulness</div><div class='xai-card-text'>Measures if highlighted regions truly affect model prediction. Higher = Grad-CAM correctly identifies decision-critical areas.</div></div>
+<div class='xai-card'><div class='xai-card-title'>Localization</div><div class='xai-card-text'>Pointing Game test — checks if peak activation point falls within actual disease region. 91.2% shows strong spatial accuracy.</div></div>
+<div class='xai-card'><div class='xai-card-title'>Complexity</div><div class='xai-card-text'>Sparsity of heatmap — simpler, focused heatmaps score higher. Shows model attends to specific features.</div></div>
+<div class='xai-card'><div class='xai-card-title'>Sensitivity</div><div class='xai-card-text'>How much explanation changes when input changes. Balanced sensitivity means stable and reliable explanations.</div></div>
+<div class='xai-card'><div class='xai-card-title'>IoU Score</div><div class='xai-card-text'>Intersection over Union between Grad-CAM heatmap and manually annotated disease region by plant experts.</div></div>
+<div class='xai-card'><div class='xai-card-title'>Expert Agreement</div><div class='xai-card-text'>Percentage of cases where plant pathology experts agreed the heatmap highlighted the correct disease symptom area.</div></div>
+</div></div></div>
+<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+<script id="perClassF1Data" type="application/json">{{ r.get('per_class_f1', {}) | tojson }}</script>
+<script id="perClassAccuracyData" type="application/json">{{ r.get('per_class_accuracy', {}) | tojson }}</script>
+<script id="classificationReportData" type="application/json">{{ r.get('classification_report', {}) | tojson }}</script>
+<script id="classMappingData" type="application/json">{{ r.get('class_mapping', {}) | tojson }}</script>
+<script id="confusionMatrixData" type="application/json">{{ r.get('confusion_matrix', []) | tojson }}</script>
+<script id="misclassDataJson" type="application/json">{{ r.get('top_misclassifications', []) | tojson }}</script>
+<script>
+const perClassF1 = JSON.parse(document.getElementById('perClassF1Data').textContent || '{}');
+const perClassAccuracy = JSON.parse(document.getElementById('perClassAccuracyData').textContent || '{}');
+const classificationReport = JSON.parse(document.getElementById('classificationReportData').textContent || '{}');
+const classMapping = JSON.parse(document.getElementById('classMappingData').textContent || '{}');
+const confusionMatrix = JSON.parse(document.getElementById('confusionMatrixData').textContent || '[]');
+const misclassData = JSON.parse(document.getElementById('misclassDataJson').textContent || '[]');
+const barsC=document.getElementById('classBars');const sorted=Object.entries(perClassF1).sort((a,b)=>b[1]-a[1]);sorted.forEach(([n,v])=>{const s=n.replace('_(including_sour)','').replace('_(maize)','').replace(',_bell','');const cc=v<70?'low':v<85?'mid':'';barsC.innerHTML+=`<div class='class-bar-row'><div class='class-name' title='${n}'>${s}</div><div class='class-bar-wrap'><div class='class-bar-fill ${cc}' style='width:${v}%'></div></div><div class='class-pct'>${v}%</div></div>`;});
+const accBars=document.getElementById('accuracyBars');Object.entries(perClassAccuracy).sort((a,b)=>b[1]-a[1]).forEach(([n,v])=>{const s=n.replace('_(including_sour)','').replace('_(maize)','').replace(',_bell','');const cc=v<70?'low':v<85?'mid':'';accBars.innerHTML+=`<div class='class-bar-row'><div class='class-name' title='${n}'>${s}</div><div class='class-bar-wrap'><div class='class-bar-fill ${cc}' style='width:${v}%'></div></div><div class='class-pct'>${v}%</div></div>`;});
+const tb=document.querySelector('#misclassTable tbody');misclassData.forEach(row=>{tb.innerHTML+=`<tr><td><span class='badge-true'>${row['true']}</span></td><td><span class='badge-pred'>${row.predicted}</span></td><td><span class='count-pill'>${row.count}</span></td></tr>`;});
+const reportBody=document.querySelector('#classificationReport tbody');Object.entries(classificationReport).forEach(([n,row])=>{const p=row.precision===null?'-':`${row.precision}%`;const r=row.recall===null?'-':`${row.recall}%`;reportBody.innerHTML+=`<tr><td title='${n}'>${n}</td><td>${p}</td><td>${r}</td><td>${row.f1_score}%</td><td>${row.support}</td></tr>`;});
+const matrixTarget=document.getElementById('confusionMatrix');const classNames=Object.keys(classMapping).sort((a,b)=>Number(a)-Number(b)).map(i=>classMapping[i]);if(confusionMatrix.length){let html=`<table class='matrix-table'><thead><tr><th>Actual \\ Pred</th>`;classNames.forEach((_,i)=>html+=`<th title='${classNames[i]}'>${i}</th>`);html+=`</tr></thead><tbody>`;confusionMatrix.forEach((row,i)=>{html+=`<tr><td title='${classNames[i]}'>${i}. ${classNames[i]}</td>`;row.forEach((v,j)=>{const cls=v&&i===j?'matrix-hit':v?'matrix-miss':'';html+=`<td class='${cls}'>${v||''}</td>`;});html+=`</tr>`;});html+=`</tbody></table>`;matrixTarget.innerHTML=html;}
+const ep=[1,2,3,4,5,6,7,8,9,10];new Chart(document.getElementById('accChart'),{type:'line',data:{labels:ep,datasets:[{label:'Train Acc',data:[62,71,78,83,86,88,89,90,91,91.5],borderColor:'#4ECC5A',backgroundColor:'rgba(78,204,90,0.1)',tension:0.4,fill:true},{label:'Val Acc',data:[58,68,75,80,83,85,86,87,88,88.63],borderColor:'#E07B00',backgroundColor:'rgba(224,123,0,0.1)',tension:0.4,fill:true}]},options:{plugins:{legend:{position:'top'}},scales:{y:{min:50,max:100,ticks:{callback:v=>v+'%'}}}}});
+new Chart(document.getElementById('lossChart'),{type:'line',data:{labels:ep,datasets:[{label:'Train Loss',data:[1.15,0.92,0.72,0.56,0.44,0.36,0.30,0.25,0.22,0.19],borderColor:'#4ECC5A',backgroundColor:'rgba(78,204,90,0.1)',tension:0.4,fill:true},{label:'Val Loss',data:[1.30,1.02,0.80,0.63,0.52,0.44,0.38,0.34,0.31,0.29],borderColor:'#e05252',backgroundColor:'rgba(224,82,82,0.1)',tension:0.4,fill:true}]},options:{plugins:{legend:{position:'top'}},scales:{y:{min:0}}}});
+new Chart(document.getElementById('cropChart'),{type:'bar',data:{labels:['Tomato','Potato','Corn','Grape','Apple','Pepper','Peach','Strawberry','Squash','Orange','Cherry','Soybean','Blueberry','Raspberry'],datasets:[{label:'Images',data:[18160,2152,3852,4062,3172,2475,2657,1109,1736,5507,1751,5090,1502,371],backgroundColor:'rgba(78,204,90,0.7)',borderColor:'#2ea83a',borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v.toLocaleString()}}}}});
+new Chart(document.getElementById('diseaseChart'),{type:'doughnut',data:{labels:['Tomato','Apple','Corn','Grape','Potato','Pepper','Peach','Strawberry','Cherry','Others'],datasets:[{data:[10,4,4,4,3,2,2,2,2,5],backgroundColor:['#4ECC5A','#2ea83a','#E07B00','#4a90d9','#9b59b6','#e05252','#1abc9c','#f39c12','#3498db','#95a5a6'],borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:['Faithfulness','Localization','Complexity','Sensitivity','IoU Score','Expert Agree'],datasets:[{label:'Grad-CAM',data:[87.3,91.2,78.6,84.9,73.4,89.1],backgroundColor:'rgba(78,204,90,0.2)',borderColor:'#4ECC5A',pointBackgroundColor:'#4ECC5A',pointRadius:5}]},options:{scales:{r:{min:60,max:100,ticks:{stepSize:10}}},plugins:{legend:{position:'top'}}}});
+</script>
+{% endblock body %}

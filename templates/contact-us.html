@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Contact Us
+{% endblock pagetitle %}
+
+{% block body %}
+
+<style>
+  /* ========== CONTACT PAGE STYLES ========== */
+  
+  .contact-hero {
+    background: linear-gradient(135deg, #021a05 0%, #042908 50%, #063d0c 100%);
+    padding: 70px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #4ECC5A;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .contact-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(78, 204, 90, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(78, 204, 90, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .contact-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  .contact-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .contact-title-accent {
+    background: linear-gradient(135deg, #4ECC5A 0%, #7ddb85 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .contact-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+  }
+
+  .contact-cards-container {
+    padding: 60px 20px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  }
+
+  .contact-card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4ECC5A 0%, #2ea83a 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .contact-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .contact-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(78, 204, 90, 0.15);
+    border-color: #4ECC5A;
+  }
+
+  .contact-card-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .contact-card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #042908;
+    margin-bottom: 12px;
+  }
+
+  .contact-card-subtitle {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .contact-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin: 25px 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .contact-info:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .contact-icon {
+    font-size: 1.3rem;
+    color: #4ECC5A;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .contact-info-content {
+    flex: 1;
+  }
+
+  .contact-info-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #042908;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .contact-info-value {
+    font-size: 0.95rem;
+    color: #555;
+    margin: 0;
+  }
+
+  .contact-info-value a {
+    color: #4ECC5A;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .contact-info-value a:hover {
+    color: #2ea83a;
+  }
+
+  .contributors-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+  }
+
+  .contributors-list li {
+    padding: 12px 0;
+    color: #555;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .contributors-list li:before {
+    content: '✓';
+    color: #4ECC5A;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .contributors-list li:last-child {
+    border-bottom: none;
+  }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .contact-card:nth-child(1) {
+    animation: fadeInUp 0.6s ease-out 0.1s both;
+  }
+
+  .contact-card:nth-child(2) {
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    .contact-hero {
+      padding: 50px 15px;
+    }
+
+    .contact-title {
+      font-size: 2rem;
+    }
+
+    .contact-subtitle {
+      font-size: 0.95rem;
+    }
+
+    .contact-card {
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .contact-cards-container {
+      padding: 40px 15px;
+    }
+  }
+</style>
+
+<!-- ========== CONTACT HERO SECTION ========== -->
+<div class="contact-hero">
+  <div class="contact-content">
+    <h1 class="contact-title">
+      Get In <span class="contact-title-accent">Touch</span>
+    </h1>
+    <p class="contact-subtitle">
+      For any queries, suggestions, or collaboration opportunities — we'd be happy to hear from you!
+    </p>
+  </div>
+</div>
+
+<!-- ========== CONTACT CARDS SECTION ========== -->
+<div class="contact-cards-container">
+  <div class="container">
+    <div class="row g-4">
+      
+      <!-- Team Leader Card -->
+      <div class="col-md-6">
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <h2 class="contact-card-title">👨‍💼 Akram Ali</h2>
+            <p class="contact-card-subtitle">Team Leader & Lead Developer</p>
+          </div>
+
+          <p style="color: #555; line-height: 1.7; margin-bottom: 25px;">
+            Data enthusiast passionate about Machine Learning, Deep Learning, and Data Science. Exploring opportunities in Data Analytics and AI to create innovative solutions.
+          </p>
+
+          <div class="contact-info">
+            <span class="contact-icon"><i class="fas fa-envelope"></i></span>
+            <div class="contact-info-content">
+              <span class="contact-info-label">Email</span>
+              <p class="contact-info-value">
+                <a href="mailto:mirakram247@gmail.com">mirakram247@gmail.com</a>
+              </p>
+            </div>
+          </div>
+
+          <div class="contact-info">
+            <span class="contact-icon"><i class="fas fa-graduation-cap"></i></span>
+            <div class="contact-info-content">
+              <span class="contact-info-label">Role</span>
+              <p class="contact-info-value">Project Lead, AI/ML Engineer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Members Card -->
+      <div class="col-md-6">
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <h2 class="contact-card-title">👥 Team Members</h2>
+            <p class="contact-card-subtitle">Collaborative Development Team</p>
+          </div>
+
+          <p style="color: #555; line-height: 1.7; margin-bottom: 25px;">
+            This project is a collaborative effort built by a dedicated team of developers working together to create an innovative plant disease detection system.
+          </p>
+
+          <div class="contact-info">
+            <span class="contact-icon"><i class="fas fa-users"></i></span>
+            <div class="contact-info-content">
+              <span class="contact-info-label">Contributors</span>
+              <ul class="contributors-list">
+                <li>Sumbal Hussain</li>
+                <li>Kashaf Ali Abbasi</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="contact-info">
+            <span class="contact-icon"><i class="fas fa-project-diagram"></i></span>
+            <div class="contact-info-content">
+              <span class="contact-info-label">Project</span>
+              <p class="contact-info-value">Final Year Project 2026</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock body %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}
+Mobile Device Notice
+{% endblock pagetitle %}
+
+{% block body %}
+<style>
+    .mobile-notice {
+        background: #eef2ee;
+        min-height: 60vh;
+        padding: 70px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mobile-notice-card {
+        max-width: 680px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 38px 32px;
+        text-align: center;
+        box-shadow: 0 8px 28px rgba(4, 41, 8, 0.1);
+        border-top: 4px solid #4ECC5A;
+    }
+
+    .mobile-notice-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 22px;
+        border-radius: 50%;
+        background: rgba(78, 204, 90, 0.12);
+        color: #042908;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.9rem;
+    }
+
+    .mobile-notice-card h1 {
+        color: #042908;
+        font-size: 1.9rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .mobile-notice-card p {
+        color: #666;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 26px;
+    }
+
+    .mobile-notice-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .mobile-notice-btn {
+        border-radius: 10px;
+        padding: 12px 26px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .mobile-notice-btn.primary {
+        background: #042908;
+        color: #ffffff;
+    }
+
+    .mobile-notice-btn.secondary {
+        background: #ffffff;
+        color: #042908;
+        border: 2px solid #d0dcd0;
+    }
+
+    .mobile-notice-btn:hover {
+        transform: translateY(-2px);
+        color: #ffffff;
+        background: #021a05;
+        border-color: #021a05;
+    }
+</style>
+
+<div class="mobile-notice">
+    <div class="mobile-notice-card">
+        <div class="mobile-notice-icon">
+            <i class="fas fa-mobile-alt"></i>
+        </div>
+        <h1>Mobile View Ready</h1>
+        <p>
+            You can use PlantAI on this device. For best results, upload a clear, well-lit photo of a single leaf with the disease symptoms visible.
+        </p>
+        <div class="mobile-notice-actions">
+            <a href="/index" class="mobile-notice-btn primary">Open AI Engine</a>
+            <a href="/" class="mobile-notice-btn secondary">Back Home</a>
+        </div>
+    </div>
+</div>
+{% endblock body %}

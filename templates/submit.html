@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}
+{{ title }}
+{% endblock pagetitle %}
+
+{% block body %}
+
+<style>
+  /* ========== RESULT PAGE STYLES ========== */
+
+  .result-hero {
+    background: linear-gradient(135deg, #021a05 0%, #042908 50%, #063d0c 100%);
+    padding: 60px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #4ECC5A;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .result-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(78, 204, 90, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(78, 204, 90, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .result-title-wrapper {
+    position: relative;
+    z-index: 1;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .result-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  .result-title-main {
+    background: linear-gradient(135deg, #4ECC5A 0%, #7ddb85 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ========== RESULT CONTAINER ========== */
+  .result-container {
+    padding: 50px 20px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+    min-height: calc(100vh - 200px);
+  }
+
+  /* ========== DISEASE IMAGE ========== */
+  .image-section-title {
+    color: #042908;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .confidence-panel {
+    background: #fff;
+    border: 2px solid #d8eadb;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    color: #042908;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  .confidence-panel.warning {
+    border-color: #ffb800;
+    background: #fffaf0;
+  }
+
+  .confidence-panel span {
+    color: #2ea83a;
+  }
+
+  .alternative-list {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .alternative-pill {
+    background: #eef8ef;
+    border: 1px solid #cfe8d2;
+    border-radius: 999px;
+    color: #042908;
+    padding: 7px 12px;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .disease-image-wrapper {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+  }
+
+  .disease-image {
+    max-width: 100%;
+    height: auto;
+    border: 4px solid #4ECC5A;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(78, 204, 90, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .disease-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 50px rgba(78, 204, 90, 0.3);
+  }
+
+  /* ========== INFO CARDS ========== */
+  .result-card {
+    background: white;
+    border-radius: 15px;
+    padding: 45px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4ECC5A 0%, #2ea83a 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .result-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .result-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(78, 204, 90, 0.15);
+    border-color: #4ECC5A;
+  }
+
+  .result-card-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #042908;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .result-card-title i {
+    color: #4ECC5A;
+    font-size: 1.8rem;
+  }
+
+  .result-card-content {
+    color: #333;
+    line-height: 2;
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+
+  /* ========== BUTTONS SECTION ========== */
+  .buttons-container {
+    text-align: center;
+    margin-top: 45px;
+    padding: 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+  }
+
+  .result-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 40px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid;
+    cursor: pointer;
+  }
+
+  .gradcam-btn {
+    background: linear-gradient(135deg, #FFB800 0%, #FF9800 100%);
+    border-color: #FFB800;
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+  }
+
+  .gradcam-btn:hover {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(255, 152, 0, 0.4);
+    color: white;
+  }
+
+  .back-btn {
+    background: linear-gradient(135deg, #4ECC5A 0%, #2ea83a 100%);
+    border-color: #4ECC5A;
+    color: white;
+    box-shadow: 0 8px 20px rgba(78, 204, 90, 0.3);
+  }
+
+  .back-btn:hover {
+    background: linear-gradient(135deg, #2ea83a 0%, #1a7c23 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(78, 204, 90, 0.4);
+    color: white;
+  }
+
+  .result-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .result-card:nth-child(1) {
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+  }
+
+  .result-card:nth-child(2) {
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    .result-hero {
+      padding: 40px 15px;
+    }
+
+    .result-title {
+      font-size: 1.8rem;
+    }
+
+    .result-container {
+      padding: 30px 15px;
+    }
+
+    .result-card {
+      padding: 25px;
+    }
+
+    .buttons-container {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .result-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<!-- ========== RESULT HERO SECTION ========== -->
+<div class="result-hero">
+  <div class="result-title-wrapper">
+    <h1 class="result-title">
+      {% if confidence is defined and confidence < 60 %}
+      Possible Match: <span class="result-title-main">{{ title }}</span>
+      {% else %}
+      Disease Detected: <span class="result-title-main">{{ title }}</span>
+      {% endif %}
+    </h1>
+  </div>
+</div>
+
+<!-- ========== RESULT CONTAINER ========== -->
+<div class="result-container">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 offset-lg-1">
+
+        {% if confidence is defined %}
+        <div class="confidence-panel {% if confidence < 60 %}warning{% endif %}">
+          Model confidence: <span>{{ confidence }}%</span>
+          {% if confidence < 60 %}
+          - prediction is uncertain; compare the uploaded leaf with the top alternatives.
+          {% endif %}
+          {% if alternatives %}
+          <div class="alternative-list">
+            {% for item in alternatives %}
+            <span class="alternative-pill">{{ item.name }}: {{ item.confidence }}%</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Disease Image -->
+        <div class="disease-image-wrapper">
+          <div class="image-section-title">Uploaded Image</div>
+          <img src="{{ uploaded_image_url }}" alt="Uploaded leaf image" class="disease-image">
+        </div>
+
+        <!-- Disease Description Card -->
+        <div class="result-card">
+          <h5 class="result-card-title">
+            <i class="fas fa-file-alt"></i> Disease Description
+          </h5>
+          <div class="result-card-content">
+            {{ desc }}
+          </div>
+        </div>
+
+        <!-- Prevention & Treatment Card -->
+        <div class="result-card">
+          <h5 class="result-card-title">
+            <i class="fas fa-shield-alt"></i> Prevention & Treatment Steps
+          </h5>
+          <div class="result-card-content">
+            {{ prevent }}
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="buttons-container">
+          <a href="/gradcam/{{ filename }}/{{ pred }}" class="result-btn gradcam-btn">
+            <i class="fas fa-microscope"></i> View Grad-CAM Heatmap
+          </a>
+          <a href="/index" class="result-btn back-btn">
+            <i class="fas fa-arrow-left"></i> Back to AI Engine
+          </a>
+          <button onclick="googleTranslateElementInit()" class="result-btn" style="background: linear-gradient(135deg, #0d6efd 0%, #0856ca 100%); border-color: #0d6efd; color: white; box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);">
+            <i class="fas fa-language"></i> Translate Page
+          </button>
+        </div>
+
+        <!-- Google Translate Widget -->
+        <div id="google_translate_element" style="display: none; text-align: center; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px;"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
+
+<!-- Google Translate Widget Script -->
+<script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'en'
+    }, 'google_translate_element');
+    document.getElementById('google_translate_element').style.display = 'block';
+  }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>

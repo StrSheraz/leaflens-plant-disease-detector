@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Plant Disease Detection
+{% endblock pagetitle %}
+{% block body %}
+<style>
+  body { overflow-x: hidden; }
+
+  /* ========== HERO SECTION ========== */
+  .hero-section {
+    background: linear-gradient(135deg, #021a05 0%, #042908 50%, #063d0c 100%);
+    padding: 80px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #4ECC5A;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(78, 204, 90, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(78, 204, 90, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  .hero-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .hero-title {
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .hero-title-accent {
+    background: linear-gradient(135deg, #4ECC5A 0%, #7ddb85 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 40px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+  }
+
+  .hero-cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #4ECC5A 0%, #2ea83a 100%);
+    color: white;
+    padding: 16px 48px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    border: 2px solid #4ECC5A;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(78, 204, 90, 0.3);
+    text-transform: uppercase;
+  }
+
+  .hero-cta-btn:hover {
+    background: linear-gradient(135deg, #2ea83a 0%, #1a7c23 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(78, 204, 90, 0.4);
+    color: white;
+  }
+
+  .hero-cta-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  /* ========== FRUIT CARDS ========== */
+  .fruit-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .fruit-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+    border-color: #4ECC5A;
+  }
+
+  .fruit-card img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .fruit-card p {
+    font-weight: 600;
+    color: #042908;
+    margin-top: 10px;
+    font-size: 1.1rem;
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 60px 15px;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+    }
+
+    .hero-icon {
+      font-size: 2.8rem;
+    }
+  }
+</style>
+
+<!-- ========== HERO SECTION ========== -->
+<div class="hero-section">
+  <div class="hero-content">
+    <div class="hero-icon">🌿</div>
+    <h1 class="hero-title">
+      Plant Disease <span class="hero-title-accent">Detection</span>
+    </h1>
+    <p class="hero-subtitle">
+      Advanced AI-powered technology to accurately detect and diagnose plant diseases from 38 crop types. Help protect your harvest with cutting-edge deep learning.
+    </p>
+    <a href="/index" class="hero-cta-btn">
+      🤖 Launch AI Engine
+    </a>
+  </div>
+</div>
+
+<div class="container-fluid px-5 mt-4">
+    <div class="row row-cols-2 row-cols-md-4 g-4 mb-4">
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/apple.jpg') }}" alt="Apple">
+                <p>Apple</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/blueberry.jpg') }}" alt="Blueberry">
+                <p>Blueberry</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/cherry.jpg') }}" alt="Cherry">
+                <p>Cherry</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/corn.jpg') }}" alt="Corn">
+                <p>Corn</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/grape.jpg') }}" alt="Grape">
+                <p>Grape</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/orange.jpg') }}" alt="Orange">
+                <p>Orange</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/peach.jpg') }}" alt="Peach">
+                <p>Peach</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/pepper.jpg') }}" alt="Pepper Bell">
+                <p>Pepper Bell</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/potato.jpg') }}" alt="Potato">
+                <p>Potato</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/raspberry.jpg') }}" alt="Raspberry">
+                <p>Raspberry</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/soybean.jpg') }}" alt="Soybean">
+                <p>Soybean</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/squash.jpg') }}" alt="Squash">
+                <p>Squash</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Last row centered -->
+    <div class="row justify-content-center g-4 mb-5">
+        <div class="col-md-3">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/strawberry.jpg') }}" alt="Strawberry">
+                <p>Strawberry</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="fruit-card">
+                <img src="{{ url_for('static', filename='images/tomato.jpg') }}" alt="Tomato">
+                <p>Tomato</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

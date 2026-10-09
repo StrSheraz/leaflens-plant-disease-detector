@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}Disease History Dashboard{% endblock pagetitle %}
+
+{% block body %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    * { box-sizing: border-box; }
+
+    /* ===== HERO ===== */
+    .hist-hero {
+        background: linear-gradient(160deg, #010f02 0%, #042908 55%, #072e0a 100%);
+        padding: 65px 24px 50px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-bottom: 3px solid #4ECC5A;
+    }
+    .hist-hero .bg-grid {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(78,204,90,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(78,204,90,0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+    }
+    .hist-hero .glow {
+        position: absolute; top: -80px; left: 50%;
+        transform: translateX(-50%);
+        width: 500px; height: 300px;
+        background: radial-gradient(ellipse, rgba(78,204,90,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .hist-hero .inner { position: relative; z-index: 2; }
+    .hist-hero .eyebrow {
+        display: inline-block;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.72rem; font-weight: 600;
+        letter-spacing: 3.5px; text-transform: uppercase;
+        color: #4ECC5A; margin-bottom: 16px;
+        border: 1px solid rgba(78,204,90,0.3);
+        padding: 6px 20px; border-radius: 100px;
+        background: rgba(78,204,90,0.07);
+        animation: fadeUp 0.5s ease both;
+    }
+    .hist-hero h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.8rem; font-weight: 800; color: #fff;
+        margin-bottom: 10px; line-height: 1.2;
+        animation: fadeUp 0.5s ease 0.1s both;
+    }
+    .hist-hero h1 em { font-style: normal; color: #4ECC5A; }
+    .hist-hero p {
+        font-family: 'DM Sans', sans-serif;
+        color: rgba(255,255,255,0.55); font-size: 1rem;
+        max-width: 480px; margin: 0 auto;
+        animation: fadeUp 0.5s ease 0.2s both;
+    }
+
+    /* ===== BODY ===== */
+    .hist-body { background: #eef2ee; padding: 44px 0 65px; }
+
+    /* ===== STAT CARDS ===== */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 768px) { .stat-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 28px 26px;
+        box-shadow: 0 4px 20px rgba(4,41,8,0.08);
+        position: relative; overflow: hidden;
+        animation: fadeUp 0.5s ease both;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(4,41,8,0.13);
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #4ECC5A, #0a8a1a);
+    }
+    .stat-card.orange::before { background: linear-gradient(90deg, #e67e22, #c0600a); }
+    .stat-card.blue::before   { background: linear-gradient(90deg, #3498db, #1a6fa8); }
+
+    .stat-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 2.5px; text-transform: uppercase;
+        color: #4ECC5A; margin-bottom: 10px;
+    }
+    .stat-card.orange .stat-label { color: #c0600a; }
+    .stat-card.blue   .stat-label { color: #1a6fa8; }
+
+    .stat-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.6rem; font-weight: 800;
+        color: #042908; line-height: 1;
+        margin-bottom: 4px;
+    }
+    .stat-desc {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; color: #777;
+    }
+
+    /* ===== CHART SECTION ===== */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+    .chart-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 26px 28px;
+        box-shadow: 0 4px 20px rgba(4,41,8,0.08);
+        animation: fadeUp 0.5s ease 0.15s both;
+    }
+    .chart-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem; font-weight: 700;
+        color: #042908; margin-bottom: 20px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .chart-title span {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 2px; text-transform: uppercase;
+        color: #4ECC5A;
+    }
+    canvas { max-height: 260px; }
+
+    /* ===== HISTORY TABLE ===== */
+    .table-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 26px 28px;
+        box-shadow: 0 4px 20px rgba(4,41,8,0.08);
+        margin-bottom: 20px;
+        animation: fadeUp 0.5s ease 0.2s both;
+    }
+    .table-header {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .table-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem; font-weight: 700; color: #042908;
+    }
+    .clear-btn {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem; font-weight: 600;
+        color: #c0392b;
+        border: 1.5px solid #c0392b;
+        background: transparent;
+        padding: 7px 18px; border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .clear-btn:hover { background: #c0392b; color: #fff; }
+
+    .hist-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+    }
+    .hist-table thead th {
+        font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 2px; text-transform: uppercase;
+        color: #4ECC5A; padding: 0 14px 14px;
+        text-align: left; border-bottom: 2px solid #eef2ee;
+    }
+    .hist-table tbody tr {
+        border-bottom: 1px solid #f4f7f4;
+        transition: background 0.2s ease;
+    }
+    .hist-table tbody tr:hover { background: #f8fbf8; }
+    .hist-table tbody tr:last-child { border-bottom: none; }
+    .hist-table td {
+        padding: 13px 14px; color: #3a3a3a;
+        vertical-align: middle;
+    }
+    .hist-table td:first-child { color: #aaa; font-size: 0.8rem; }
+
+    .disease-pill {
+        display: inline-block;
+        background: rgba(78,204,90,0.1);
+        border: 1px solid rgba(78,204,90,0.25);
+        color: #042908; font-weight: 600;
+        font-size: 0.82rem;
+        padding: 4px 12px; border-radius: 100px;
+    }
+
+    .action-link {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem; font-weight: 600;
+        color: #042908; text-decoration: none;
+        border: 1.5px solid #d0dcd0;
+        padding: 5px 14px; border-radius: 8px;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    .action-link:hover {
+        background: #042908; color: #fff;
+        border-color: #042908;
+    }
+
+    .empty-state {
+        text-align: center; padding: 55px 20px;
+    }
+    .empty-state svg {
+        width: 56px; height: 56px;
+        stroke: #c8d8c8; margin-bottom: 16px;
+    }
+    .empty-state h4 {
+        font-family: 'Syne', sans-serif;
+        color: #042908; font-size: 1rem; margin-bottom: 8px;
+    }
+    .empty-state p {
+        font-family: 'DM Sans', sans-serif;
+        color: #aaa; font-size: 0.9rem;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .d1 { animation-delay: 0.05s; }
+    .d2 { animation-delay: 0.12s; }
+    .d3 { animation-delay: 0.19s; }
+</style>
+
+<!-- HERO -->
+<div class="hist-hero">
+    <div class="bg-grid"></div>
+    <div class="glow"></div>
+    <div class="inner">
+        <div class="eyebrow">Analytics</div>
+        <h1>Disease <em>History</em></h1>
+        <p>Track every plant diagnosis — see patterns, trends, and past results at a glance.</p>
+    </div>
+</div>
+
+<!-- BODY -->
+<div class="hist-body">
+    <div class="container">
+
+        <!-- Stats -->
+        <div class="stat-grid">
+            <div class="stat-card d1">
+                <div class="stat-label">Total Scans</div>
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-desc">All time detections</div>
+            </div>
+            <div class="stat-card orange d2">
+                <div class="stat-label">Unique Diseases</div>
+                <div class="stat-value">{{ stats.unique_diseases }}</div>
+                <div class="stat-desc">Different diseases detected</div>
+            </div>
+            <div class="stat-card blue d3">
+                <div class="stat-label">Most Common</div>
+                <div class="stat-value" style="font-size: 1.2rem; padding-top: 8px;">
+                    {{ stats.top_disease | truncate(22, True, '…') }}
+                </div>
+                <div class="stat-desc">Highest frequency disease</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        {% if detections %}
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">
+                    Top Diseases <span>by frequency</span>
+                </div>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">
+                    Daily Detections <span>last 14 days</span>
+                </div>
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- History Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Detection Log</div>
+                {% if detections %}
+                <form method="POST" action="/history/clear"
+                      onsubmit="return confirm('Saari history delete karo? Yeh undo nahi hogi.');">
+                    <button type="submit" class="clear-btn">Clear History</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if detections %}
+            <table class="hist-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Disease</th>
+                        <th>Date & Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in detections %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><span class="disease-pill">{{ d.disease }}</span></td>
+                        <td>{{ d.detected_at }}</td>
+                        <td>
+                            <a href="/gradcam/{{ d.filename }}/{{ d.pred_index }}"
+                               class="action-link">View Grad-CAM</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <h4>Koi detection nahi mili</h4>
+                <p>Pehle koi plant scan karo — history yahan dikhegi.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Back button -->
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="/index" style="
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.95rem; font-weight: 600;
+                background: #042908; color: #fff;
+                padding: 13px 36px; border-radius: 12px;
+                text-decoration: none;
+                box-shadow: 0 5px 18px rgba(4,41,8,0.25);
+                transition: all 0.3s ease;
+                display: inline-block;
+            ">New Analysis</a>
+        </div>
+
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    {% if detections %}
+
+    // ── Bar Chart — Top Diseases ──
+    const barLabels  = {{ disease_counts | map(attribute='disease') | list | tojson }};
+    const barData    = {{ disease_counts | map(attribute='count')   | list | tojson }};
+
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: barLabels.map(l => l.length > 20 ? l.substring(0,20)+'…' : l),
+            datasets: [{
+                label: 'Detections',
+                data: barData,
+                backgroundColor: 'rgba(78,204,90,0.75)',
+                borderColor: '#4ECC5A',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => barLabels[items[0].dataIndex]
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'DM Sans' } },
+                    grid: { color: '#f0f4f0' }
+                },
+                x: {
+                    ticks: { font: { family: 'DM Sans', size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // ── Line Chart — Daily Detections ──
+    const lineLabels = {{ daily_counts | map(attribute='day')   | list | tojson }};
+    const lineData   = {{ daily_counts | map(attribute='count') | list | tojson }};
+
+    new Chart(document.getElementById('lineChart'), {
+        type: 'line',
+        data: {
+            labels: lineLabels,
+            datasets: [{
+                label: 'Scans',
+                data: lineData,
+                borderColor: '#4ECC5A',
+                backgroundColor: 'rgba(78,204,90,0.08)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#042908',
+                pointBorderColor: '#4ECC5A',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'DM Sans' } },
+                    grid: { color: '#f0f4f0' }
+                },
+                x: {
+                    ticks: { font: { family: 'DM Sans', size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    {% endif %}
+</script>
+
+{% endblock body %}

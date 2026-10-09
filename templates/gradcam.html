@@ -1,0 +1,687 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}
+Grad-CAM – {{ title }}
+{% endblock pagetitle %}
+
+{% block body %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    * { box-sizing: border-box; }
+
+    /* ===== HERO ===== */
+    .gc-hero {
+        background: linear-gradient(160deg, #010f02 0%, #042908 55%, #072e0a 100%);
+        padding: 34px 24px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .gc-hero .bg-grid {
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(78,204,90,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(78,204,90,0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+    .gc-hero .glow-left {
+        position: absolute; top: -80px; left: -80px;
+        width: 350px; height: 350px;
+        background: radial-gradient(circle, rgba(78,204,90,0.12) 0%, transparent 65%);
+        border-radius: 50%;
+        animation: breathe 5s ease-in-out infinite;
+    }
+    .gc-hero .glow-right {
+        position: absolute; bottom: -100px; right: -60px;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(78,204,90,0.08) 0%, transparent 65%);
+        border-radius: 50%;
+        animation: breathe 5s ease-in-out infinite 2.5s;
+    }
+    @keyframes breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+    .gc-hero .inner { position: relative; z-index: 2; }
+    .gc-hero .eyebrow {
+        display: inline-block;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.72rem; font-weight: 600;
+        letter-spacing: 3.5px; text-transform: uppercase;
+        color: #4ECC5A; margin-bottom: 12px;
+        border: 1px solid rgba(78,204,90,0.3);
+        padding: 5px 18px; border-radius: 100px;
+        background: rgba(78,204,90,0.07);
+        animation: fadeUp 0.6s ease both;
+    }
+    .gc-hero h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.55rem; font-weight: 800; color: #fff;
+        line-height: 1.1; margin-bottom: 10px;
+        animation: fadeUp 0.6s ease 0.15s both;
+    }
+    .gc-hero h1 em { font-style: normal; color: #4ECC5A; }
+    .gc-hero .subtitle {
+        font-family: 'DM Sans', sans-serif;
+        color: rgba(255,255,255,0.6); font-size: 1rem;
+        font-weight: 300; max-width: 500px;
+        margin: 0 auto 18px; line-height: 1.6;
+        animation: fadeUp 0.6s ease 0.3s both;
+    }
+    .gc-badge {
+        display: inline-block;
+        font-family: 'DM Sans', sans-serif;
+        background: rgba(255,255,255,0.07);
+        border: 1.5px solid rgba(255,255,255,0.15);
+        color: #fff; font-size: 0.9rem; font-weight: 500;
+        padding: 9px 26px; border-radius: 100px;
+        backdrop-filter: blur(8px);
+        animation: fadeUp 0.6s ease 0.45s both;
+    }
+    .gc-badge strong { color: #4ECC5A; }
+
+    /* ===== BODY ===== */
+    .gc-body { background: #eef2ee; padding: 32px 0 55px; }
+
+    .section-eyebrow {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 3px; text-transform: uppercase;
+        color: #042908; opacity: 0.4;
+        margin-bottom: 16px; text-align: center;
+    }
+
+    /* ===== IMAGE FRAMES ===== */
+    .image-compare-row {
+        align-items: stretch;
+    }
+
+    .img-frame {
+        border-radius: 18px; overflow: hidden;
+        background: #fff;
+        box-shadow: 0 6px 28px rgba(4,41,8,0.10);
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        animation: fadeUp 0.6s ease both;
+    }
+    .img-frame:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 48px rgba(4,41,8,0.17);
+    }
+    .img-frame-bar {
+        padding: 13px 20px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem; font-weight: 600;
+        letter-spacing: 0.5px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .img-frame-bar .dot {
+        width: 8px; height: 8px;
+        border-radius: 50%; flex-shrink: 0;
+    }
+    .bar-original { background: #042908; color: rgba(255,255,255,0.8); }
+    .bar-original .dot { background: #4ECC5A; }
+    .bar-heatmap { background: #2d1500; color: rgba(255,255,255,0.8); }
+    .bar-heatmap .dot { background: #e67e22; }
+    .img-frame-body {
+        padding: 18px;
+        display: flex; align-items: center; justify-content: center;
+        height: 355px;
+    }
+    .img-frame-body img {
+        width: min(100%, 370px);
+        height: 315px;
+        object-fit: contain;
+        border-radius: 8px;
+        transition: transform 0.4s ease;
+    }
+    .img-frame:hover .img-frame-body img { transform: scale(1.03); }
+
+    /* ===== XAI PANEL ===== */
+    .xai-panel {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 6px 30px rgba(4,41,8,0.10);
+        margin-bottom: 20px;
+        overflow: hidden;
+        animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    .xai-header {
+        background: linear-gradient(135deg, #021a05 0%, #042908 60%, #063d0c 100%);
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .xai-header::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image:
+            linear-gradient(rgba(78,204,90,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(78,204,90,0.04) 1px, transparent 1px);
+        background-size: 30px 30px;
+    }
+
+    .xai-header-inner {
+        position: relative; z-index: 1;
+        padding: 20px 28px;
+        display: flex; align-items: center;
+        justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+
+    .xai-header-left { display: flex; align-items: center; gap: 16px; }
+
+    .xai-icon-box {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        background: rgba(78,204,90,0.12);
+        border: 1px solid rgba(78,204,90,0.3);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .xai-icon-box svg {
+        width: 22px; height: 22px;
+        stroke: #4ECC5A; fill: none;
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .xai-title-wrap h4 {
+        font-family: 'Syne', sans-serif;
+        color: #fff; font-size: 1.05rem;
+        font-weight: 700; margin: 0 0 3px;
+    }
+    .xai-title-wrap p {
+        font-family: 'DM Sans', sans-serif;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.78rem; margin: 0;
+    }
+
+    .xai-model-pill {
+        font-family: 'DM Sans', sans-serif;
+        background: rgba(78,204,90,0.12);
+        border: 1px solid rgba(78,204,90,0.3);
+        color: #4ECC5A;
+        font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 2px; text-transform: uppercase;
+        padding: 6px 16px; border-radius: 100px;
+    }
+
+    /* XAI Body */
+    .xai-body { padding: 24px 28px; }
+
+    .xai-loading {
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 44px 20px; gap: 16px;
+    }
+    .xai-loading .ring {
+        width: 44px; height: 44px;
+        border: 3px solid #e0ece0;
+        border-top-color: #4ECC5A;
+        border-radius: 50%;
+        animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .xai-loading p {
+        font-family: 'DM Sans', sans-serif;
+        color: #999; font-size: 0.88rem; margin: 0;
+    }
+
+    .xai-content { display: none; }
+
+    .xai-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .xai-section {
+        padding: 20px 0;
+        border-bottom: 1px solid #f0f4f0;
+    }
+    .xai-section:last-child { border-bottom: none; }
+    .xai-section.full-width { grid-column: 1 / -1; }
+
+    .xai-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 2.5px; text-transform: uppercase;
+        color: #4ECC5A; margin-bottom: 8px;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .xai-label::after {
+        content: '';
+        flex: 1; height: 1px;
+        background: rgba(78,204,90,0.2);
+        display: none;
+    }
+
+    .xai-text {
+        font-family: 'DM Sans', sans-serif;
+        color: #3a3a3a; font-size: 0.95rem;
+        line-height: 1.8; font-weight: 400;
+    }
+
+    /* Confidence bar */
+    .confidence-wrap { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+    .conf-bar-bg {
+        flex: 1; height: 7px;
+        background: #e8f0e8; border-radius: 100px; overflow: hidden;
+    }
+    .conf-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4ECC5A, #0a8a1a);
+        border-radius: 100px;
+        transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+        width: 0%;
+    }
+    .conf-num {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem; font-weight: 800;
+        color: #042908; min-width: 48px; text-align: right;
+    }
+
+    /* Error */
+    .xai-error {
+        display: none; text-align: center; padding: 32px 20px;
+    }
+    .xai-error p {
+        font-family: 'DM Sans', sans-serif;
+        color: #c0392b; font-size: 0.92rem; margin-bottom: 16px;
+    }
+    .retry-btn {
+        font-family: 'DM Sans', sans-serif;
+        background: #042908; color: #fff;
+        padding: 10px 28px; border-radius: 10px;
+        border: none; cursor: pointer; font-size: 0.88rem;
+        transition: all 0.3s ease;
+    }
+    .retry-btn:hover { background: #021a05; transform: translateY(-2px); }
+
+    /* ===== BOTTOM INFO SECTION ===== */
+    .info-section { margin-top: 8px; }
+
+    /* Legend strip */
+    .legend-strip {
+        background: #fff;
+        border-radius: 16px;
+        padding: 22px 28px;
+        box-shadow: 0 3px 16px rgba(4,41,8,0.07);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        animation: fadeUp 0.6s ease 0.3s both;
+    }
+
+    .legend-strip-label {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.82rem; font-weight: 700;
+        color: #042908;
+        margin-right: 8px;
+        white-space: nowrap;
+    }
+
+    .legend-divider {
+        width: 1px; height: 24px;
+        background: #dde8dd;
+        margin: 0 4px;
+    }
+
+    .legend-item {
+        display: flex; align-items: center; gap: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; color: #444;
+    }
+
+    .legend-swatch {
+        width: 32px; height: 14px;
+        border-radius: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+
+    /* Two col info cards */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .gc-hero { padding: 28px 18px 26px; }
+        .gc-hero h1 { font-size: 2rem; }
+        .gc-body { padding-top: 24px; }
+        .img-frame-body { height: 300px; }
+        .img-frame-body img {
+            width: min(100%, 300px);
+            height: 265px;
+        }
+        .info-grid { grid-template-columns: 1fr; }
+        .xai-row { grid-template-columns: 1fr; }
+        .legend-strip { flex-direction: column; align-items: flex-start; }
+        .legend-divider { display: none; }
+        .xai-section {
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+            border-right: none !important;
+        }
+    }
+
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px 26px;
+        box-shadow: 0 3px 16px rgba(4,41,8,0.07);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeUp 0.6s ease both;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4ECC5A, #0a8a1a);
+    }
+
+    .info-card.orange-accent::before {
+        background: linear-gradient(90deg, #e67e22, #c0600a);
+    }
+
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(4,41,8,0.12);
+    }
+
+    .info-card-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 2.5px; text-transform: uppercase;
+        color: #4ECC5A; margin-bottom: 10px;
+    }
+
+    .info-card.orange-accent .info-card-label { color: #c0600a; }
+
+    .info-card h5 {
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem; font-weight: 700;
+        color: #042908; margin-bottom: 10px;
+    }
+
+    .info-card p {
+        font-family: 'DM Sans', sans-serif;
+        color: #555; font-size: 0.9rem;
+        line-height: 1.75; margin: 0; font-weight: 400;
+    }
+
+    /* ===== BUTTONS ===== */
+    .gc-actions {
+        display: flex; justify-content: center;
+        gap: 14px; flex-wrap: wrap; margin-top: 38px;
+    }
+    .gc-btn {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.95rem; font-weight: 600;
+        padding: 13px 36px; border-radius: 12px;
+        border: none; cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block; letter-spacing: 0.2px;
+    }
+    .gc-btn-primary {
+        background: #042908; color: #fff;
+        box-shadow: 0 5px 18px rgba(4,41,8,0.25);
+    }
+    .gc-btn-primary:hover {
+        background: #021a05; color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 28px rgba(4,41,8,0.35);
+    }
+    .gc-btn-secondary {
+        background: #fff; color: #042908;
+        border: 2px solid #d0dcd0;
+        box-shadow: 0 3px 12px rgba(4,41,8,0.07);
+    }
+    .gc-btn-secondary:hover {
+        background: #042908; color: #fff;
+        border-color: #042908;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 28px rgba(4,41,8,0.28);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .d1 { animation-delay: 0.1s; }
+    .d2 { animation-delay: 0.22s; }
+    .d3 { animation-delay: 0.34s; }
+    .d4 { animation-delay: 0.46s; }
+</style>
+
+<!-- HERO -->
+<div class="gc-hero">
+    <div class="bg-grid"></div>
+    <div class="glow-left"></div>
+    <div class="glow-right"></div>
+    <div class="inner">
+        <div class="eyebrow">AI Explainability</div>
+        <h1>Grad-CAM <em>Visualization</em></h1>
+        <p class="subtitle">
+            This heatmap reveals which region of the leaf image the model focused on while diagnosing the disease.
+        </p>
+        <div class="gc-badge">Detected: <strong>{{ title }}</strong></div>
+    </div>
+</div>
+
+<!-- BODY -->
+<div class="gc-body">
+    <div class="container">
+
+        <!-- Images -->
+        <p class="section-eyebrow">Model Input vs Model Attention</p>
+        <div class="row mb-4 image-compare-row">
+            <div class="col-md-6 mb-4">
+                <div class="img-frame d1">
+                    <div class="img-frame-bar bar-original">
+                        <span class="dot"></span> Original Image
+                    </div>
+                    <div class="img-frame-body">
+                        <img src="{{ original_image }}" alt="Original Image">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="img-frame d2">
+                    <div class="img-frame-bar bar-heatmap">
+                        <span class="dot"></span> Grad-CAM Heatmap
+                    </div>
+                    <div class="img-frame-body">
+                        <img src="data:image/png;base64,{{ gradcam_image }}" alt="Grad-CAM Heatmap">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- XAI Panel -->
+        <div class="xai-panel">
+            <div class="xai-header">
+                <div class="xai-header-inner">
+                    <div class="xai-header-left">
+                        <div class="xai-icon-box">
+                            <!-- Clean SVG brain/circuit icon -->
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C8.5 2 6 4.5 6 7.5c0 1.5.5 2.8 1.4 3.8C6.5 12.1 6 13.2 6 14.5 6 17 8 19 10.5 19H12v3h2v-3h1.5C18 19 20 17 20 14.5c0-1.3-.5-2.4-1.4-3.2.9-1 1.4-2.3 1.4-3.8C20 4.5 17.5 2 14 2h-2z"/>
+                                <line x1="12" y1="7" x2="12" y2="13"/>
+                                <line x1="9" y1="10" x2="15" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="xai-title-wrap">
+                            <h4>AI-Powered Explanation</h4>
+                            <p>Explainable AI analysis of your Grad-CAM result</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="xai-body">
+                <!-- Loading -->
+                <div class="xai-loading" id="xaiLoading">
+                    <div class="ring"></div>
+                    <p>Analyzing with AI, please wait...</p>
+                </div>
+
+                <!-- Content -->
+                <div class="xai-content" id="xaiContent">
+                    <div class="xai-row">
+                        <div class="xai-section" style="padding-right: 28px; border-right: 1px solid #f0f4f0;">
+                            <div class="xai-label">Disease Overview</div>
+                            <div class="xai-text" id="xaiOverview"></div>
+                        </div>
+                        <div class="xai-section" style="padding-left: 28px;">
+                            <div class="xai-label">What the Heatmap Shows</div>
+                            <div class="xai-text" id="xaiHeatmap"></div>
+                        </div>
+                        <div class="xai-section" style="padding-right: 28px; border-right: 1px solid #f0f4f0;">
+                            <div class="xai-label">Why the Model Focused There</div>
+                            <div class="xai-text" id="xaiFocus"></div>
+                        </div>
+                        <div class="xai-section" style="padding-left: 28px;">
+                            <div class="xai-label">Recommended Action</div>
+                            <div class="xai-text" id="xaiAction"></div>
+                        </div>
+                    </div>
+                    <!-- Confidence full width -->
+                    <div class="xai-section full-width" style="padding-top: 18px;">
+                        <div class="xai-label">Calibrated Model Score</div>
+                        <div class="confidence-wrap">
+                            <div class="conf-bar-bg">
+                                <div class="conf-bar-fill" id="confidenceBar"></div>
+                            </div>
+                            <div class="conf-num" id="confidenceLabel">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div class="xai-error" id="xaiError">
+                    <p id="xaiErrorMsg">Could not load AI explanation. Please try again.</p>
+                    <button class="retry-btn" onclick="fetchXAI()">Retry</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BOTTOM INFO SECTION ===== -->
+        <div class="info-section">
+
+            <!-- Legend strip -->
+            <div class="legend-strip d3">
+                <span class="legend-strip-label">Heatmap Color Guide</span>
+                <div class="legend-divider"></div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background: linear-gradient(90deg,#ff0000,#ff4444);"></div>
+                    <span><strong>Red</strong> — Highest attention</span>
+                </div>
+                <div class="legend-divider"></div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background: linear-gradient(90deg,#ffe600,#ffdd00);"></div>
+                    <span><strong>Yellow</strong> — Medium importance</span>
+                </div>
+                <div class="legend-divider"></div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background: linear-gradient(90deg,#0033ff,#2255ff);"></div>
+                    <span><strong>Blue</strong> — Low focus / background</span>
+                </div>
+            </div>
+
+            <!-- Two info cards -->
+            <div class="info-grid">
+                <div class="info-card d3">
+                    <div class="info-card-label">Technique</div>
+                    <h5>What is Grad-CAM?</h5>
+                    <p>
+                        <strong>Gradient-weighted Class Activation Mapping</strong> highlights which parts of the image the AI used to make its decision. Red regions show where the model focused most — typically where disease symptoms are visible.
+                    </p>
+                </div>
+                <div class="info-card orange-accent d4">
+                    <div class="info-card-label">Accuracy Note</div>
+                    <h5>Heatmap Limitations</h5>
+                    <p>
+                        The highlighted region shows the <strong>overall area</strong> the model considered important. This may include leaf edges, texture patterns, or color contrast — reflecting training patterns, not necessarily exact symptom locations.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="gc-actions">
+            <a href="javascript:history.back()" class="gc-btn gc-btn-secondary">Back to Results</a>
+            <a href="/index" class="gc-btn gc-btn-primary">New Analysis</a>
+            <a href="/download-report/{{ filename }}/{{ pred }}" 
+   class="gc-btn" 
+   style="background: linear-gradient(135deg, #4ECC5A, #2ea83a); color: #042908; font-weight: 700; box-shadow: 0 5px 18px rgba(78,204,90,0.3);">
+    <i class="fas fa-file-pdf"></i> Download PDF
+</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const diseaseName = "{{ title }}";
+    const modelConfidence = {{ confidence | default(0) | int }};
+
+    async function fetchXAI() {
+        document.getElementById('xaiLoading').style.display = 'flex';
+        document.getElementById('xaiContent').style.display = 'none';
+        document.getElementById('xaiError').style.display = 'none';
+
+        try {
+            const response = await fetch('/api/xai-explain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    disease: diseaseName,
+                    confidence: modelConfidence
+                })
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            document.getElementById('xaiOverview').innerText = data.overview || '—';
+            document.getElementById('xaiHeatmap').innerText  = data.heatmap  || '—';
+            document.getElementById('xaiFocus').innerText    = data.focus    || '—';
+            document.getElementById('xaiAction').innerText   = data.action   || '—';
+
+            const conf = Number.isFinite(Number(data.confidence)) ? Number(data.confidence) : modelConfidence;
+            document.getElementById('confidenceLabel').innerText = conf + '%';
+            setTimeout(() => {
+                document.getElementById('confidenceBar').style.width = conf + '%';
+            }, 300);
+
+            document.getElementById('xaiLoading').style.display = 'none';
+            document.getElementById('xaiContent').style.display = 'block';
+
+        } catch (err) {
+            document.getElementById('xaiLoading').style.display = 'none';
+            document.getElementById('xaiErrorMsg').innerText = 'Error: ' + err.message;
+            document.getElementById('xaiError').style.display = 'block';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', fetchXAI);
+</script>
+
+{% endblock body %}
